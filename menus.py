@@ -1,5 +1,5 @@
 import bpy
-import bmesh
+from . import utils
 
 def DrawProblems(layout, problems, text):
 
@@ -35,19 +35,7 @@ class UVProblemsMenu(bpy.types.Menu):
         uv_maps_problems = []
 
         for obj in bpy.context.selected_objects:
-
-            if (obj.data.uv_layers.__len__() > 0):
-                if (obj.data.uv_layers[0].name != "map1"):
-                    uv_maps_problems.append(f"{obj.name}: incorrect UV name")
-            else:
-                uv_maps_problems.append(f"{obj.name}: no UV maps. Should be added manually")
-
-            if (len(obj.data.uv_layers) > 1):
-                uv_maps_problems.append(f"{obj.name}: More then 1 UV map")
-
-            for edge in bm.edges:
-                if not edge.smooth and not edge.seam:
-                    uv_maps_problems.append(f"{obj.name}: has sharp edge wihout seam")
+            uv_maps_problems.append(utils.GetUVMapsProblems(obj=obj))
 
         DrawProblems(layout, uv_maps_problems, "UV MAPS problems")
 
@@ -114,7 +102,6 @@ class MaterialProblemsMenu(bpy.types.Menu):
 
         DrawProblems(layout, materials_problems, "MATERIALS problems")
                 
-
 class GeometryCleanupMenu(bpy.types.Menu):
     bl_label = "Geometry Cleanup"
     bl_idname = "OBJECT_MT_geometry_cleanup"
@@ -132,3 +119,20 @@ class GeometryCleanupMenu(bpy.types.Menu):
         layout.operator("object.clean_uv_maps")
         layout.operator("object.clean_vertex_colors")
         layout.operator("geometry_clenup.triangulate_ngons")
+
+classes = (
+    UVProblemsMenu,
+    VertexColorsProblemsMenu,
+    GeometryProblemsMenu,
+    MaterialProblemsMenu,
+    GeometryCleanupMenu
+)
+
+def register():
+	for cls in classes:
+		bpy.utils.register_class(cls)
+
+
+def unregister():
+	for cls in reversed(classes):
+		bpy.utils.unregister_class(cls)
